@@ -5,6 +5,8 @@ from textblob import TextBlob
 
 import signal
 
+BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAIPYjwEAAAAAMxcWc40PvgF2vZkmst9wL26NucQ%3D5o671fqtP0KxDGHMJ3LPlJ1qcZcRxFiF1j75zuOIQf3yGfzV3z"
+
 # Inital program welcome message
 welcome_message = "Welcome to the Twitter User Sentiment Analyzer! This program will allow you to analyze the Twitter sentiment of various users across multiple criteria: their personal tweets, their mentions, and their liked tweets. Sentiment scores are returned in the form XX / YY where XX represent the percentage of tweets that are positive and YY represents the percentage of tweets that are negative. There are currently four analysis types supported: personal, mentions, liked, and overall.\n"
 
@@ -12,12 +14,13 @@ welcome_message = "Welcome to the Twitter User Sentiment Analyzer! This program 
 valid_types = ["personal", "mentions", "liked", "overall"]
 
 # Initialize Tweepy API (Elevated Twitter developer account is required)
-auth = tweepy.OAuth2BearerHandler("ENTER PERSONAL BEARER TOKEN")
+# auth = tweepy.OAuth2BearerHandler("ENTER PERSONAL BEARER TOKEN")
+auth = tweepy.OAuth2BearerHandler(BEARER_TOKEN)
 api = tweepy.API(auth)
 
 # Prompt user for input and parse given user requests
 def processInput():
-    value = input("Enter a valid Twitter handle and anlysis type in the form \"@username, anlysis_type\": ")
+    value = input("Enter a valid Twitter handle and anlysis type in the form \"@username, analysis_type\": ")
     request = value.split(",")
 
     user = request[0]
