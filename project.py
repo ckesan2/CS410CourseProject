@@ -54,7 +54,8 @@ def processInput():
                 tweets = getTweets(user) + getMentions(user) + getLiked(user, u)
 
             # Currently relevant tweets are printed to console (this will be updated in future development)
-            print(tweets)
+            # print(tweets)
+            return user, tweets
 
     except Exception as e:
         return print(str(e))
@@ -75,6 +76,64 @@ def getLiked(user, u):
     tweets = [liked.text for liked in tweepy.Cursor(api.get_favorites, user_id = u.id).items(200)]
     return tweets
 
+#cleans tweets
+def standardize(tweets):
+    cleaned_tweets = []
+    for tweet in tweets:
+        #remove special characters
+        new_tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)|([^0-9A-Za-z \t])|(\w+:\/\/\S+)", " ", tweet).split())
+        cleaned_tweets.append(new_tweet)
+    return cleaned_tweets
+
+#gets sentiment of passed in tweets as positive, negative, or neutral
+def getSentiment(tweets):
+    pos_tweets = []
+    neg_tweets = []
+    neutral_tweets = []
+
+    for tweet in tweets:
+
+        #creates TextBlob object using passed in tweet
+        #this further processes the tweet by tokenizing it, removes stop words, does POS tagging.
+        #all done over the textblob library
+        analysis = TextBlob(tweet)
+        
+        #uses the sentiment classifier
+        #TextBlob uses a dataset with positive and negative labels to use for training
+        #internally, the Naive Bayes Classifier trains the data
+        if analysis.sentiment.polarity > 0:
+            pos_tweets.append(tweet)
+        elif analysis.sentiment.polarity < 0: 
+            neg_tweets.append(tweet)
+        else:
+            neutral_tweets.append(tweet)
+
+    return pos_tweets, neg_tweets, neutral_tweets
+
+#gives numerical results for the sentiment of a twitter user
+def calculateTotalSentiment(user, pos_tweets, neg_tweets, neutral_tweets):
+    total = len(pos_tweets) + len(neg_tweets) + len(neutral_tweets)
+
+    pos_perc = (len(pos_tweets) / total) * 100 
+    neg_perc = (len(neg_tweets) / total) * 100
+    neutral_perc = (len(neutral_tweets) / total) * 100
+
+    sentiment = None 
+    
+    if pos_perc > neg_perc and pos_perc >= neutral_perc:
+        sentiment = "Positive!"
+    elif neg_perc > pos_perc and neg_perc >= neutral_perc:
+        sentiment = "Negative!"
+    else:
+        sentiment = "Neutral!"
+
+    print(str(pos_perc) + "%" + " of the tweets are Positive!")
+    print(str(neg_perc) + "%" + " of the tweets are Negative!")
+    print(str(neutral_perc) + "%" + " of the tweets are Neutral!")
+
+    print("The overall sentiment of " + user + " is " + sentiment)
+
+
 # Handles graceful program exit
 def handler(sig, fr):
     print("\nExiting program . . .")
@@ -86,7 +145,12 @@ signal.signal(signal.SIGINT, handler)
 def main():
     print(welcome_message)
     while True:
-        processInput()
+        user, tweets = processInput()
+        cleaned_tweets = standardize(tweets)
+
+        (pos_tweets, neg_tweets, neutral_tweets) = getSentiment(cleaned_tweets)
+        calculateTotalSentiment(user, pos_tweets, neg_tweets, neutral_tweets)
+
 
 if __name__ == '__main__':
     main() 
